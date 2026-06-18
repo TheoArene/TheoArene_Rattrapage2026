@@ -11,6 +11,9 @@ public class EnemyController : MonoBehaviour
     // Référence au contrôleur de niveau — injectée par LevelController lors du spawn
     private LevelController levelController;
 
+    // Prefab à instancier à la position de l'ennemi quand il est détruit (null par défaut)
+    [SerializeField] private GameObject bonusADropper;
+
     /// <summary>
     /// Initialise la référence au LevelController (appelé par LevelController.SpawnerGrille)
     /// </summary>
@@ -20,13 +23,25 @@ public class EnemyController : MonoBehaviour
     }
 
     /// <summary>
-    /// Gère la collision avec un projectile joueur : score, destruction du projectile et de l'ennemi
+    /// Assigne le prefab de bonus à déposer à la destruction de cet ennemi
+    /// </summary>
+    public void DefinirBonusADropper(GameObject prefab)
+    {
+        bonusADropper = prefab;
+    }
+
+    /// <summary>
+    /// Gère la collision avec un projectile joueur : drop du bonus éventuel, score, destructions
     /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Touché par un projectile joueur : +1 point, destruction de l'ennemi et du projectile
+        // Touché par un projectile joueur : dépose le bonus si configuré, puis +1 point
         if (other.CompareTag("PlayerBullet"))
         {
+            // Instancie le bonus comme enfant du groupe d'ennemis (même parent) pour qu'il suive la grille
+            if (bonusADropper != null)
+                Instantiate(bonusADropper, transform.position, Quaternion.identity, transform.parent);
+
             GameManager.Instance.AddScore(1);
             Destroy(other.gameObject);
             levelController?.SignalerEnnemiDetruit(gameObject);

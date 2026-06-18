@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     // Meilleur score sauvegardé localement
     private int meilleurScore;
 
-    // Niveau en cours (1 ou 2)
+    // Niveau en cours (1, 2 ou 3)
     private int niveauActuel;
 
     // Référence au gestionnaire d'interface
@@ -92,20 +92,21 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Déclenche la victoire — passe au niveau suivant ou affiche l'écran de fin
+    /// Déclenche la victoire — passe au niveau suivant ou affiche l'écran de fin finale
     /// </summary>
     public void Victory()
     {
-        if (niveauActuel < 2)
+        if (niveauActuel < 3)
         {
-            // Passage au niveau suivant — affiche la transition puis lance le niveau 2
+            // Passage au niveau suivant — texte dynamique "Niveau X !"
             niveauActuel++;
-            uiManager.ShowLevelTransition("Niveau 2 !");
-            StartCoroutine(LancerNiveauApresTransition(2));
+            string texteTransition = $"Niveau {niveauActuel} !";
+            uiManager.ShowLevelTransition(texteTransition);
+            StartCoroutine(LancerNiveauApresTransition(niveauActuel));
         }
         else
         {
-            // Fin réelle du jeu après le niveau 2 — fige le jeu
+            // Fin réelle du jeu après le niveau 3 — fige le jeu
             Time.timeScale = 0f;
             playerGameObject.SetActive(false);
             SauvegarderMeilleurScore();

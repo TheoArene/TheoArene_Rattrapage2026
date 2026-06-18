@@ -42,8 +42,14 @@ public class LevelController : MonoBehaviour
     // Prefab de l'ennemi à instancier dans la grille
     [SerializeField] private GameObject enemyPrefab;
 
+    // Prefab du bonus explosif — assigné uniquement à l'ennemi central au niveau 2
+    [SerializeField] private GameObject bonusPrefab;
+
     // Parent commun de tous les ennemis — déplacé comme un seul bloc
     [SerializeField] private Transform enemyGroupParent;
+
+    // Tableau des quatre boucliers — activés et reconstruits uniquement au niveau 3
+    [SerializeField] private ShieldBuilder[] boucliers;
 
     // Liste des ennemis encore vivants
     private readonly List<GameObject> ennemisActifs = new List<GameObject>();
@@ -55,7 +61,7 @@ public class LevelController : MonoBehaviour
     private bool niveauEnCours;
 
     /// <summary>
-    /// Lance un niveau : réinitialise la grille et démarre le mouvement
+    /// Lance un niveau : réinitialise la grille, démarre le mouvement et gère les boucliers
     /// </summary>
     public void StartLevel(int niveau)
     {
@@ -63,10 +69,29 @@ public class LevelController : MonoBehaviour
         SpawnerGrille(niveau);
         directionActuelle = 1f;
         niveauEnCours = true;
+
+        // Niveau 3 : active et reconstruit les boucliers ; autres niveaux : boucliers masqués
+        if (boucliers != null)
+        {
+            foreach (ShieldBuilder bouclier in boucliers)
+            {
+                if (bouclier == null) continue;
+
+                if (niveau == 3)
+                {
+                    bouclier.gameObject.SetActive(true);
+                    bouclier.Reconstruire();
+                }
+                else
+                {
+                    bouclier.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     /// <summary>
-    /// Supprime tous les ennemis présents et réinitialise l'état du niveau
+    /// Supprime tous les ennemis présents, réinitialise l'état du niveau et masque les boucliers
     /// </summary>
     public void ClearLevel()
     {
@@ -79,6 +104,16 @@ public class LevelController : MonoBehaviour
 
         // Recentre le groupe à l'origine pour le prochain niveau
         enemyGroupParent.position = Vector3.zero;
+
+        // Sécurité : désactive tous les boucliers au retour menu ou en cas de Game Over
+        if (boucliers != null)
+        {
+            foreach (ShieldBuilder bouclier in boucliers)
+            {
+                if (bouclier != null)
+                    bouclier.gameObject.SetActive(false);
+            }
+        }
     }
 
     /// <summary>
@@ -100,14 +135,24 @@ public class LevelController : MonoBehaviour
                 // Injecte le LevelController dans l'EnemyController de cet ennemi
                 EnemyController controller = ennemi.GetComponent<EnemyController>();
                 if (controller != null)
+                {
                     controller.Init(this);
+
+                    // Niveau 2 : assigne le bonus à l'ennemi central (ligne 2, colonne 4)
+                    if (niveau == 2 && ligne == 2 && col == 4 && bonusPrefab != null)
+                        controller.DefinirBonusADropper(bonusPrefab);
+                }
 
                 // Désactive le tir par défaut sur tous les ennemis
                 EnemyShooter shooter = ennemi.GetComponent<EnemyShooter>();
                 if (shooter != null)
                 {
-                    // Niveau 2 : active le tir uniquement sur les colonnes 0 et 1
-                    shooter.enabled = (niveau == 2 && ligne < 2);
+                    // Niveaux 2 et 3 : active le tir uniquement sur les lignes 0 et 1
+                    shooter.enabled = (niveau >= 2 && ligne < 2);
+
+                    // Règle la probabilité de tir selon le niveau (50% au niveau 3, 30% au niveau 2)
+                    if (shooter.enabled)
+                        shooter.DefinirProbabiliteTir(niveau == 3 ? 0.5f : 0.3f);
                 }
 
                 ennemisActifs.Add(ennemi);
@@ -159,6 +204,19 @@ public class LevelController : MonoBehaviour
         // Plus aucun ennemi sur le terrain = victoire
         if (ennemisActifs.Count == 0)
             gameManager.Victory();
+    }
+
+    /// <summary>
+    /// Détruit un ennemi via l'explosion d'un bonus : réutilise la logique de score et de victoire
+    /// </summary>
+    public void DetruireParExplosion(EnemyController ennemi)
+    {
+        if (ennemi == null) return;
+
+        // Même comportement qu'un tir joueur classique : score, retrait de liste, vérification victoire
+        GameManager.Instance.AddScore(1);
+        SignalerEnnemiDetruit(ennemi.gameObject);
+        Destroy(ennemi.gameObject);
     }
 
     /// <summary>

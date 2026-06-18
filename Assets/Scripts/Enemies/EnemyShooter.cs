@@ -1,9 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Tir aléatoire d'un ennemi — utilisé uniquement en niveau 2 sur les colonnes 0 et 1.
+/// Tir aléatoire d'un ennemi — activé par LevelController sur les lignes 0 et 1 à partir du niveau 2.
 /// Ce composant est désactivé par défaut dans le prefab Enemy.
-/// LevelController l'active au moment du spawn selon le niveau et la colonne.
 /// </summary>
 public class EnemyShooter : MonoBehaviour
 {
@@ -16,8 +15,8 @@ public class EnemyShooter : MonoBehaviour
     // Intervalle entre deux tentatives de tir (en secondes)
     private const float IntervalleTir = 3f;
 
-    // Probabilité de tirer à chaque tentative (0 = jamais, 1 = toujours)
-    private const float ProbabiliteTir = 0.3f;
+    // Probabilité de tirer à chaque tentative — modifiable selon le niveau
+    private float probabiliteTir = 0.3f;
 
     // Référence au SpriteRenderer mis en cache dans Awake
     private SpriteRenderer spriteRenderer;
@@ -51,12 +50,21 @@ public class EnemyShooter : MonoBehaviour
     }
 
     /// <summary>
+    /// Définit la probabilité de tir — appelé par LevelController selon le niveau
+    /// </summary>
+    public void DefinirProbabiliteTir(float proba)
+    {
+        // Valeur clampée entre 0 (jamais) et 1 (toujours)
+        probabiliteTir = Mathf.Clamp01(proba);
+    }
+
+    /// <summary>
     /// Tente de tirer selon la probabilité définie
     /// </summary>
     private void TenterTir()
     {
         // Tire uniquement si le tirage aléatoire dépasse le seuil
-        if (Random.value <= ProbabiliteTir)
+        if (Random.value <= probabiliteTir)
             Tirer();
     }
 
