@@ -10,17 +10,35 @@ public class EnemyShooter : MonoBehaviour
     // Prefab du projectile ennemi instancié lors d'un tir
     [SerializeField] private GameObject enemyBulletPrefab;
 
+    // Couleur violette pour distinguer visuellement les ennemis tireurs
+    [SerializeField] private Color couleurTireur = new Color(0.6f, 0.1f, 0.8f);
+
     // Intervalle entre deux tentatives de tir (en secondes)
     private const float IntervalleTir = 3f;
 
     // Probabilité de tirer à chaque tentative (0 = jamais, 1 = toujours)
     private const float ProbabiliteTir = 0.3f;
 
+    // Référence au SpriteRenderer mis en cache dans Awake
+    private SpriteRenderer spriteRenderer;
+
     /// <summary>
-    /// Lance la boucle de tir dès que le composant est activé
+    /// Met en cache le SpriteRenderer du GameObject
+    /// </summary>
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    /// <summary>
+    /// Colorise l'ennemi en violet et lance la boucle de tir dès que le composant est activé
     /// </summary>
     private void OnEnable()
     {
+        // Applique la couleur tireur avant le premier tir pour une lisibilité immédiate
+        if (spriteRenderer != null)
+            spriteRenderer.color = couleurTireur;
+
         InvokeRepeating(nameof(TenterTir), IntervalleTir, IntervalleTir);
     }
 

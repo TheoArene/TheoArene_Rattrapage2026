@@ -84,6 +84,29 @@ public class UIManager : MonoBehaviour
         finalScoreText.text = "Score final : " + valeur;
     }
 
+    [Header("Transition de niveau")]
+    // Panel affiché entre deux niveaux
+    [SerializeField] private GameObject transitionPanel;
+    // Texte affiché dans le panel de transition
+    [SerializeField] private Text transitionText;
+
+    /// <summary>
+    /// Affiche le panel de transition avec le texte donné
+    /// </summary>
+    public void ShowLevelTransition(string texte)
+    {
+        transitionPanel.SetActive(true);
+        transitionText.text = texte;
+    }
+
+    /// <summary>
+    /// Masque le panel de transition
+    /// </summary>
+    public void HideLevelTransition()
+    {
+        transitionPanel.SetActive(false);
+    }
+
     /// <summary>
     /// Quitte l'application (stoppe le Play mode en éditeur)
     /// </summary>

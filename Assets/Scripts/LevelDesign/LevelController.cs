@@ -25,7 +25,7 @@ public class LevelController : MonoBehaviour
     private const float OrigineY = 3.0f;
 
     // Vitesse de déplacement horizontal du groupe (en unités par seconde)
-    private const float VitesseHorizontale = 1.5f;
+    private const float VitesseHorizontale = 2f;
 
     // Distance de descente à chaque rebond latéral (en unités)
     private const float PasDescente = 0.5f;
@@ -107,7 +107,7 @@ public class LevelController : MonoBehaviour
                 if (shooter != null)
                 {
                     // Niveau 2 : active le tir uniquement sur les colonnes 0 et 1
-                    shooter.enabled = (niveau == 2 && col <= 1);
+                    shooter.enabled = (niveau == 2 && ligne < 2);
                 }
 
                 ennemisActifs.Add(ennemi);

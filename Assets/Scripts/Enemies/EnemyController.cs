@@ -20,7 +20,7 @@ public class EnemyController : MonoBehaviour
     }
 
     /// <summary>
-    /// Gère les collisions avec les éléments du joueur
+    /// Gère la collision avec un projectile joueur : score, destruction du projectile et de l'ennemi
     /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -31,13 +31,6 @@ public class EnemyController : MonoBehaviour
             Destroy(other.gameObject);
             levelController?.SignalerEnnemiDetruit(gameObject);
             Destroy(gameObject);
-            return;
-        }
-
-        // Contact direct avec le joueur = game over immédiat
-        if (other.CompareTag("Player"))
-        {
-            GameManager.Instance.GameOver();
         }
     }
 }

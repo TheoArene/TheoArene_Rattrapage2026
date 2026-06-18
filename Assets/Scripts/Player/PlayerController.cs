@@ -26,16 +26,32 @@ public class PlayerController : MonoBehaviour
     // Horodatage du dernier tir (pour le cooldown)
     private float tempsDernierTir;
 
+    // Position de départ sauvegardée pour la réinitialiser à chaque partie
+    private Vector2 positionDepart;
+
     // Limites de déplacement horizontal calculées depuis la caméra
     private float limiteGauche;
     private float limiteDroite;
 
     /// <summary>
-    /// Met en cache les composants et calcule les limites d'écran
+    /// Met en cache les composants et sauvegarde la position de départ
     /// </summary>
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        positionDepart = transform.position;
+    }
+
+    /// <summary>
+    /// Réinitialise la position du joueur à chaque activation (nouvelle partie ou rejeu)
+    /// </summary>
+    private void OnEnable()
+    {
+        if (rb != null)
+            rb.MovePosition(positionDepart);
+
+        // Réinitialise le cooldown pour éviter un tir immédiat
+        tempsDernierTir = 0f;
     }
 
     /// <summary>
@@ -76,8 +92,10 @@ public class PlayerController : MonoBehaviour
     {
         float directionInput = 0f;
 
-        // Touche gauche : Q (AZERTY) ou flèche gauche
-        if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow))
+        // Touche gauche : A (position physique AZERTY = Q sur QWERTY) ou flèche gauche
+        // L'ancien Input Manager Unity mappe les KeyCode sur la position physique QWERTY,
+        // donc KeyCode.A correspond à la touche "Q" d'un clavier AZERTY sous Windows.
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
             directionInput = -1f;
 
         // Touche droite : D (AZERTY) ou flèche droite

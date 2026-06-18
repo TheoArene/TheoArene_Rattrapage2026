@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // Gestionnaire principal du jeu — Singleton
@@ -23,6 +24,9 @@ public class GameManager : MonoBehaviour
 
     // Référence au contrôleur de niveau
     [SerializeField] private LevelController levelController;
+
+    // Référence au GameObject du joueur — activé/désactivé selon l'état du jeu
+    [SerializeField] private GameObject playerGameObject;
 
     /// <summary>
     /// Initialise le Singleton et charge le meilleur score sauvegardé
@@ -55,8 +59,11 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartGame()
     {
+        // Remet le temps à la normale (en cas de Game Over ou victoire finale précédents)
+        Time.timeScale = 1f;
         score = 0;
         niveauActuel = 1;
+        playerGameObject.SetActive(true);
         uiManager.ShowHUD();
         uiManager.UpdateScore(score);
         levelController.StartLevel(1);
@@ -72,10 +79,13 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Déclenche la défaite du joueur
+    /// Déclenche la défaite du joueur — fige le jeu immédiatement
     /// </summary>
     public void GameOver()
     {
+        // Fige le jeu pour stopper la grille et tous les mouvements
+        Time.timeScale = 0f;
+        playerGameObject.SetActive(false);
         SauvegarderMeilleurScore();
         uiManager.ShowEnd(false);
         uiManager.UpdateFinalScore(score);
@@ -88,17 +98,34 @@ public class GameManager : MonoBehaviour
     {
         if (niveauActuel < 2)
         {
-            // Passage au niveau suivant
+            // Passage au niveau suivant — affiche la transition puis lance le niveau 2
             niveauActuel++;
-            levelController.StartLevel(niveauActuel);
+            uiManager.ShowLevelTransition("Niveau 2 !");
+            StartCoroutine(LancerNiveauApresTransition(2));
         }
         else
         {
-            // Fin du jeu après le niveau 2
+            // Fin réelle du jeu après le niveau 2 — fige le jeu
+            Time.timeScale = 0f;
+            playerGameObject.SetActive(false);
             SauvegarderMeilleurScore();
             uiManager.ShowEnd(true);
             uiManager.UpdateFinalScore(score);
         }
+    }
+
+    /// <summary>
+    /// Attend en temps réel puis masque la transition et lance le niveau donné
+    /// </summary>
+    private IEnumerator LancerNiveauApresTransition(int niveau)
+    {
+        // Durée de la transition en secondes réels (indépendant de Time.timeScale)
+        const float DureeTransition = 1.5f;
+
+        yield return new WaitForSecondsRealtime(DureeTransition);
+
+        uiManager.HideLevelTransition();
+        levelController.StartLevel(niveau);
     }
 
     /// <summary>
@@ -114,6 +141,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void ReturnToMenu()
     {
+        // Remet le temps à la normale par sécurité
+        Time.timeScale = 1f;
+        playerGameObject.SetActive(false);
         levelController.ClearLevel();
         uiManager.ShowMenu();
         uiManager.UpdateBestScore(meilleurScore);
